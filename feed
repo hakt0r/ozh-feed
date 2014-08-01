@@ -56,8 +56,7 @@ _feed_daemon(){
   local nextrun="0"
   local base="$OZH/feed/list"; mkdir -p "$base"
   while sleep $nextrun.9;do
-    nextrun=3600
-    touch --date="1970-01-01 $(( $(date +"%s") + 0)) sec" "$OZH/feed/now";
+    nextrun=3600; touch "$OZH/feed/now";
     for task in $(ls $base);do task="$base/$task"
       local interval=60; [ -f "$task/interval" ] && interval=$(cat "$task/interval")
       local update=false
@@ -67,7 +66,7 @@ _feed_daemon(){
         local url=$(cat $task/url)
         local result=$(curl $lastarg -si "$url" 2>/dev/null)
         local http_status=$(( $(echo "$result"|head -n1|busybox sed 's/^HTTP\/... //'|cut -f 1 -d ' ') + 0 ))
-        local http_modified=$(echo "$result" |grep -P "^Last-Modified:"|busybox sed "s/Last-Modified: //")
+        local http_modified=$(echo "$result" |grep "^Last-Modified:"|busybox sed "s/Last-Modified: //")
         echo TASK: $task $http_status >&2 
         if test "$http_status" -eq 200; then
           local nextupdate=$(( $(date +"%s") + $interval))
@@ -75,9 +74,10 @@ _feed_daemon(){
           echo "$result"|busybox sed '1,/^.$/d' > "$task/cache"
           touch --date="1970-01-01 $nextupdate sec" "$task/next"
           update="true"
-          ( [ -f "$task/onupdate" ] && . "$task/onupdate"; )
+          ( [ -f "$task/onupdate" ] && FEED_REQUIRE="$task" . "$task/onupdate"; )
     fi;fi;done;done; }
 
 _install_feed(){
   [ -d "$OZH/uht" ] && { echo ". $OZH/feed/feed; _feed_web" > "$OZH/uht/feed"; }
-  for i in fefe nne spin heise eztv telepolis;do oz install feed/$i; _install_feed_$i; done; }
+  for i in fefe nne spin heise eztv telepolis;do
+    FEED_REQUIRE="$i" oz install feed/$i; _install_feed_$i; done; }

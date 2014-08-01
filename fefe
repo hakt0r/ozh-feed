@@ -22,37 +22,42 @@ _license(){ echo "
 
   http://www.gnu.org/licenses/gpl.html"; }
 
-url="http://blog.fefe.de"
+[ -n "OZH_REQUIRE" ] && {
 
-fefe() {
-  local count=$1; test -z $count && count=3
-  wget -qO- "$url" | sed 's/>/>\n/g' |
-    awk 'BEGIN{an=0;article=0;printf "'$bred$bold$white'fefe'$R'"}
-    /<li>/{article=1;an++;if(an>0&&an<'$count'+1)printf "\n%s*%s"," '$bold$white'","'$R'"}
+  fefe() {
+    local url="http://blog.fefe.de"
+    local count=$1; test -z $count && count=3;
+    wget -qO- "$url" | pipe_progress | sed 's/>/>\n/g' |
+      awk 'BEGIN{an=0;article=0;printf "'$bred$bold$white'fefe'$R'"}
+      /<li>/{article=1;an++;if(an>0&&an<'$count'+1)printf "\n%s*%s"," '$bold$white'","'$R'"}
+      (an>'$count'){exit(0)}
+      (article){
+        gsub("<a[^>]+>","'$bred$white$bold'",$0); gsub("</a>","'$R'",$0)
+        gsub("\\[l\\]","",$0)
+        gsub("<b>"," '$bold$bblue$white'",$0); gsub("</b>","'$R'",$0)
+        gsub("<[^>]+>","",$0)
+        printf $0; }
+      END{printf "\x1b[K\n"}'; }; }
+
+[ -n "FEED_REQUIRE" ] && {
+
+  _feed_fefe(){
+    local url="http://blog.fefe.de"
+    count=1; data="$(cat $task/cache | awk 'BEGIN{an=0;article=0}
+    /<li>/{article=1;an++;if(an>0&&an<'$count'+1)printf ""}
     (an>'$count'){exit(0)}
     (article){
-      gsub("<a[^>]+>","'$bred$white$bold'",$0); gsub("</a>","'$R'",$0)
       gsub("\\[l\\]","",$0)
-      gsub("<b>"," '$bold$bblue$white'",$0); gsub("</b>","'$R'",$0)
-      gsub("<[^>]+>","",$0)
-      printf $0; }
-    END{printf "\x1b[K\n"}'; }
+      gsub("<li>","",$0); gsub("</li>","'$R'",$0)
+      gsub("<p>","",$0); gsub("</p>","'$R'",$0)
+      printf $0; }')"
+    echo "$data" > $task/new
+    [ "$(cat $task/new)" = "$(cat $task/cur)" ] || {
+      echo "$data" > $task/cur
+    DISPLAY=:0 notify-send -u critical "fefe" "$data"; }; }
 
-_feed_fefe(){
-  count=1; data="$(cat $task/cache | awk 'BEGIN{an=0;article=0}
-  /<li>/{article=1;an++;if(an>0&&an<'$count'+1)printf ""}
-  (an>'$count'){exit(0)}
-  (article){
-    gsub("\\[l\\]","",$0)
-    gsub("<li>","",$0); gsub("</li>","'$R'",$0)
-    gsub("<p>","",$0); gsub("</p>","'$R'",$0)
-    printf $0; }')"
-  echo "$data" > $task/new
-  [ "$(cat $task/new)" = "$(cat $task/cur)" ] || {
-    echo "$data" > $task/cur
-  DISPLAY=:0 notify-send -u critical "fefe" "$data"; }; }
-
-_install_feed_fefe(){
-  local p="$OZH/feed/list/fefe"; mkdir -p "$p"
-  echo "$url" > "$p/url"
-  echo '. $OZH/feed/fefe; _feed_fefe' > "$p/onupdate"; }
+  _install_feed_fefe(){
+    local url="http://blog.fefe.de"
+    local p="$OZH/feed/list/fefe"; mkdir -p "$p"
+    echo "$url" > "$p/url"
+    echo '. $OZH/feed/fefe; _feed_fefe' > "$p/onupdate"; }; }

@@ -22,21 +22,27 @@ _license(){ echo "
 
   http://www.gnu.org/licenses/gpl.html"; }
 
-url="http://www.net-news-express.de/rssfeed.php"
+[ -n "OZH_REQUIRE" ] && {
 
-nne(){ wget -O- "$url" 2>/dev/null \
-  | head -n 25 \
-  | sed '1,/<item>/d' \
-  | head -n1 \
-  | sed 's/^.*CDATA.//'|sed 's/...<\/title.*//';}
+  nne(){
+    local url="http://www.net-news-express.de/rssfeed.php"
+    wget -O- "$url" 2>/dev/null \
+    | head -n 25 \
+    | sed '1,/<item>/d' \
+    | head -n1 \
+    | sed 's/^.*CDATA.//'|sed 's/...<\/title.*//';}; }
 
-_feed_nne(){
-  count=1; data="$(cat $task/cache |
-    head -n 25 | sed '1,/<item>/d' | head -n1 |
-    busybox sed 's/^.*CDATA.//;s/...<\/title.*//')"
-  echo "$data" > "$task/new"
-  [ "$(cat $task/new)" = "$(cat $task/cur)" ] || {
-    echo "$data" > $task/cur
-    DISPLAY=:0 notify-send -u critical "nne" "$data"; };  }
+[ -n "FEED_REQUIRE" ] && {
 
-_install_feed_nne(){ local p="$OZH/feed/list/nne"; mkdir -p "$p"; echo "$url" > "$p/url"; echo '. $OZH/feed/nne; _feed_nne' > "$p/onupdate"; }
+  _feed_nne(){
+    count=1; data="$(cat $task/cache |
+      head -n 25 | sed '1,/<item>/d' | head -n1 |
+      busybox sed 's/^.*CDATA.//;s/...<\/title.*//')"
+    echo "$data" > "$task/new"
+    [ "$(cat $task/new)" = "$(cat $task/cur)" ] || {
+      echo "$data" > $task/cur
+      DISPLAY=:0 notify-send -u critical "nne" "$data"; };  }
+
+  _install_feed_nne(){
+    local url="http://www.net-news-express.de/rssfeed.php"
+    local p="$OZH/feed/list/nne"; mkdir -p "$p"; echo "$url" > "$p/url"; echo '. $OZH/feed/nne; _feed_nne' > "$p/onupdate"; }; }

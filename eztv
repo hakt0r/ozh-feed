@@ -22,18 +22,24 @@ _license(){ echo "
 
   http://www.gnu.org/licenses/gpl.html"; }
 
-url="http://eztv.it"
+[ -n "OZH_REQUIRE" ] && {
 
-_filter_eztv(){
-  html2text -width 10000 | grep -oP '[-_A-Za-z0-9()\[\]]+' | grep '_' | grep -v 'comment' | tail -n 53 | head -n 50; }
+  _filter_eztv(){ html2text -width 10000 | grep -oP '[-_A-Za-z0-9()\[\]]+' | grep '_' | grep -v 'comment' | tail -n 53 | head -n 50; }
 
-_feed_eztv(){
-  count=1; data="$(cat $task/cache | _filter_rss)"
-  echo "$data" > $task/new
-  [ "$(cat $task/new)" = "$(cat $task/cur)" ] || {
-    echo "$data" > $task/cur
-	DISPLAY=:0 notify-send -u critical "eztv" "$data"; }; }
+  eztv(){
+    local url="http://eztv.it"
+    wget -q "$url" -O- | _filter_eztv; }; }
 
-_install_feed_eztv(){ local p="$OZH/feed/list/eztv"; mkdir -p "$p"; echo "$url" > "$p/url"; echo '. $OZH/feed/eztv; _feed_eztv' > "$p/onupdate"; }
+[ -n "FEED_REQUIRE" ] && {
 
-eztv(){ wget -q "$url" -O- | _filter_eztv; }
+  _feed_eztv(){
+    local url="http://eztv.it"
+    count=1; data="$(cat $task/cache | _filter_rss)"
+    echo "$data" > $task/new
+    [ "$(cat $task/new)" = "$(cat $task/cur)" ] || {
+      echo "$data" > $task/cur
+    DISPLAY=:0 notify-send -u critical "eztv" "$data"; }; }
+
+  _install_feed_eztv(){
+    local url="http://eztv.it"
+    local p="$OZH/feed/list/eztv"; mkdir -p "$p"; echo "$url" > "$p/url"; echo '. $OZH/feed/eztv; _feed_eztv' > "$p/onupdate"; }; }

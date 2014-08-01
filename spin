@@ -22,18 +22,27 @@ _license(){ echo "
 
   http://www.gnu.org/licenses/gpl.html"; }
 
-url="http://www.spiegel.de/schlagzeilen/index.rss"
 
-_filter_spin(){ busybox sed '/title.*\/title/!d;/SPIEGEL/d;s/<.title>//g;s/<title>//'; }
+_filter_spin(){
+  busybox sed '/title.*\/title/!d;/SPIEGEL/d;s/<.title>//g;s/<title>//'; }
 
-_feed_spin(){
-  count=1; data="$(cat $task/cache | _filter_spin)"
-  echo "$data" > $task/new
-  [ "$(cat $task/new)" = "$(cat $task/cur)" ] || {
-    echo "$data" > $task/cur
-  DISPLAY=:0 notify-send -u critical "spin" "$data"; }; }
+[ -n "OZH_REQUIRE" ] && {
 
-_install_feed_spin(){ local p="$OZH/feed/list/spin"; mkdir -p "$p"; echo "$url" > "$p/url"; echo '. $OZH/feed/spin; _feed_spin' > "$p/onupdate"; }
+  spin(){ spinlong | head -n1; }
 
-spin(){ spinlong | head -n1; }
-spinlong(){ wget -O- "$url" | _filter_spin; }
+  spinlong(){
+    local url="http://www.spiegel.de/schlagzeilen/index.rss"
+    wget -O- "$url" | _filter_spin; }; }
+
+[ -n "FEED_REQUIRE" ] && {
+
+  _feed_spin(){
+    count=1; data="$(cat $task/cache | _filter_spin)"
+    echo "$data" > $task/new
+    [ "$(cat $task/new)" = "$(cat $task/cur)" ] || {
+      echo "$data" > $task/cur
+    DISPLAY=:0 notify-send -u critical "spin" "$data"; }; }
+
+  _install_feed_spin(){
+    local url="http://www.spiegel.de/schlagzeilen/index.rss"
+    local p="$OZH/feed/list/spin"; mkdir -p "$p"; echo "$url" > "$p/url"; echo '. $OZH/feed/spin; _feed_spin' > "$p/onupdate"; }; }

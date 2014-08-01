@@ -22,18 +22,25 @@ _license(){ echo "
 
   http://www.gnu.org/licenses/gpl.html"; }
 
-url="http://www.heise.de/newsticker/heise-atom.xml"
 
 _filter_rss(){
   grep -P '<title>.*?</title>' | sed 's/<title>//gi' | sed 's/<\/title>//gi' | head -n5 | tail -n4; }
 
-_feed_telepolis(){
-  count=1; data="$(cat $task/cache | _filter_rss)"
-  echo "$data" > $task/new
-  [ "$(cat $task/new)" = "$(cat $task/cur)" ] || {
-    echo "$data" > $task/cur
-  DISPLAY=:0 notify-send -u critical "telepolis" "$data"; }; }
+[ -n "OZH_REQUIRE" ] && {
 
-_install_feed_telepolis(){ local p="$OZH/feed/list/telepolis"; mkdir -p "$p"; echo "$url" > "$p/url"; echo '. $OZH/feed/telepolis; _feed_telepolis' > "$p/onupdate"; }
+  telepolis() {
+    local url="http://www.heise.de/newsticker/heise-atom.xml"
+    wget -O- "$url" | _filter_rss; }; }
 
-telepolis() { wget -O- "$url" | _filter_rss; }
+[ -n "FEED_REQUIRE" ] && {
+
+  _feed_telepolis(){
+    count=1; data="$(cat $task/cache | _filter_rss)"
+    echo "$data" > $task/new
+    [ "$(cat $task/new)" = "$(cat $task/cur)" ] || {
+      echo "$data" > $task/cur
+    DISPLAY=:0 notify-send -u critical "telepolis" "$data"; }; }
+
+  _install_feed_telepolis(){
+    local url="http://www.heise.de/newsticker/heise-atom.xml"
+    local p="$OZH/feed/list/telepolis"; mkdir -p "$p"; echo "$url" > "$p/url"; echo '. $OZH/feed/telepolis; _feed_telepolis' > "$p/onupdate"; }; }
