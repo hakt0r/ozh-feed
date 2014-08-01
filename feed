@@ -1,0 +1,83 @@
+#!/bin/sh
+
+_copyright(){ echo "
+  ozh lightweight shell extensions
+  2008-2014 - anx @ ulzq de (Sebastian Glaser)
+  Licensed under GNU GPL v3"; }
+_license(){ echo "
+  ozh is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2, or (at your option)
+  any later version.
+
+  ozh is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this software; see the file COPYING.  If not, write to
+  the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+  Boston, MA 02111-1307 USA
+
+  http://www.gnu.org/licenses/gpl.html"; }
+
+_feed_web(){
+  local base="$OZH/feed/list"; mkdir -p "$base"; _read_arg
+  local task="$base/$_GET_task"
+  case "$_GET_action" in
+    'add')
+      mkdir -p "$task"
+      echo "$_GET_url" > "$task/url"
+      local interval=60; [ -f "$task/interval" ] && interval=$(cat "$task/interval")
+      test -n "$_GET_interval" && interval=$_GET_interval; echo $interval > "$task/interval"
+      mime="text/json"; r="{\"status\":\"ok\",\"task\":\"$_GET_task\"}";;
+    'del') r="$()";;
+    'view') r="$(cat $OZH/feed/list/$_GET_task/cache)";;
+    'refresh') ;;
+    * ) r="
+      <style>
+        th {text-align:right;padding-right:1em}
+      </style>
+      <table>$(for name in $(ls $base);do task="$base/$name"
+      local interval=60; [ -f "$task/interval" ] && interval=$(cat "$task/interval")
+      echo "<tr><th>$name</th><td>
+        <i>$interval</i>
+        <a href=\"/feed?action=refresh&task=$name\">refresh</a>
+        <a href=\"/feed?action=view&task=$name\">view</a>
+        <i>$([ -f $task/cache ] && ls -al $task/cache|cut -f5-8 -d\ )</i>
+      </td></tr><!--tr><td colspan=2>
+        <iframe src=\"/feed?action=view&task=$name\"></iframe>
+      </td></tr-->"
+    done)</table>";;
+  esac; _reply "$r"; }
+
+_feed_daemon(){
+  local nextrun="0"
+  local base="$OZH/feed/list"; mkdir -p "$base"
+  while sleep $nextrun.9;do
+    nextrun=3600
+    touch --date="1970-01-01 $(( $(date +"%s") + 0)) sec" "$OZH/feed/now";
+    for task in $(ls $base);do task="$base/$task"
+      local interval=60; [ -f "$task/interval" ] && interval=$(cat "$task/interval")
+      local update=false
+      [ "$nextrun" -gt "$interval" ] && export nextrun="$interval"
+      [ -f "$task/next" ] && { last=$(cat "$task/next"); lastarg="-H 'If-Modified-Since: $last'"; }
+      if [ ! -f "$task/next" ] || [ ! -f "$task/cache" ] || [ "$OZH/feed/now" -nt "$task/next" ]; then
+        local url=$(cat $task/url)
+        local result=$(curl $lastarg -si "$url" 2>/dev/null)
+        local http_status=$(( $(echo "$result"|head -n1|busybox sed 's/^HTTP\/... //'|cut -f 1 -d ' ') + 0 ))
+        local http_modified=$(echo "$result" |grep -P "^Last-Modified:"|busybox sed "s/Last-Modified: //")
+        echo TASK: $task $http_status >&2 
+        if test "$http_status" -eq 200; then
+          local nextupdate=$(( $(date +"%s") + $interval))
+          [ -z "$http_modified" ] && echo -n "$http_modified" > "$task/next"
+          echo "$result"|busybox sed '1,/^.$/d' > "$task/cache"
+          touch --date="1970-01-01 $nextupdate sec" "$task/next"
+          update="true"
+          ( [ -f "$task/onupdate" ] && . "$task/onupdate"; )
+    fi;fi;done;done; }
+
+_install_feed(){
+  [ -d "$OZH/uht" ] && { echo ". $OZH/feed/feed; _feed_web" > "$OZH/uht/feed"; }
+  for i in fefe nne spin heise eztv telepolis;do oz install feed/$i; _install_feed_$i; done; }
