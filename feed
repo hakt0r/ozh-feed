@@ -86,7 +86,9 @@ _feed_daemon(){
             cp "$task/cache" "$task/last"; update="true";
             oz hook run feed/update "$name" "$(cat "$task/cache" | head -n1)"
           fi
-        fi; rm "$tmp"; fi;done;done; }
+        fi; rm "$tmp"; fi;done
+      $verbose && printf "$bblue$white$bold $nextrun $R " >&2 
+    done; }
 
 _install_feed(){
   [ -d "$OZH/uht" ] && { echo ". $OZH/feed/feed; _feed_web" > "$OZH/uht/feed"; }
