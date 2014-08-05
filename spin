@@ -23,26 +23,12 @@ _license(){ echo "
   http://www.gnu.org/licenses/gpl.html"; }
 
 
-_filter_spin(){
-  busybox sed '/title.*\/title/!d;/SPIEGEL/d;s/<.title>//g;s/<title>//'; }
+_filter_spin(){ sed -n '/<title/{s/<title>//;s/<\/title>//;p}'| iconv -f iso-8859-1 -t utf-8 | tail -n +3; }
 
 [ -n "OZH_REQUIRE" ] && {
-
+  _feed_spin_defaults(){ url="http://www.spiegel.de/schlagzeilen/index.rss"; }
   spin(){ spinlong | head -n1; }
-
-  spinlong(){
-    local url="http://www.spiegel.de/schlagzeilen/index.rss"
-    wget -O- "$url" | _filter_spin; }; }
+  spinlong(){ _feed_spin_defaults; wget -qO- "$url" | _filter_spin | _format_title; }; }
 
 [ -n "FEED_REQUIRE" ] && {
-
-  _feed_spin(){
-    count=1; data="$(cat $task/cache | _filter_spin)"
-    echo "$data" > $task/new
-    [ "$(cat $task/new)" = "$(cat $task/cur)" ] || {
-      echo "$data" > $task/cur
-    DISPLAY=:0 notify-send -u critical "spin" "$data"; }; }
-
-  _install_feed_spin(){
-    local url="http://www.spiegel.de/schlagzeilen/index.rss"
-    local p="$OZH/feed/list/spin"; mkdir -p "$p"; echo "$url" > "$p/url"; echo '. $OZH/feed/spin; _feed_spin' > "$p/onupdate"; }; }
+  _feed_spin(){ count=1; format=_filter_spin; }; }

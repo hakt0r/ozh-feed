@@ -22,25 +22,9 @@ _license(){ echo "
 
   http://www.gnu.org/licenses/gpl.html"; }
 
-
-_filter_rss(){
-  grep -P '<title>.*?</title>' | sed 's/<title>//gi' | sed 's/<\/title>//gi' | head -n5 | tail -n4; }
-
 [ -n "OZH_REQUIRE" ] && {
-
-  telepolis() {
-    local url="http://www.heise.de/newsticker/heise-atom.xml"
-    wget -O- "$url" | _filter_rss; }; }
+  _feed_telepolis_defaults(){ url="http://www.heise.de/newsticker/heise-atom.xml"; }
+  telepolis() { _feed_telepolis_defaults; wget -qO- "$url" | _filter_rss | _format_title; }; }
 
 [ -n "FEED_REQUIRE" ] && {
-
-  _feed_telepolis(){
-    count=1; data="$(cat $task/cache | _filter_rss)"
-    echo "$data" > $task/new
-    [ "$(cat $task/new)" = "$(cat $task/cur)" ] || {
-      echo "$data" > $task/cur
-    DISPLAY=:0 notify-send -u critical "telepolis" "$data"; }; }
-
-  _install_feed_telepolis(){
-    local url="http://www.heise.de/newsticker/heise-atom.xml"
-    local p="$OZH/feed/list/telepolis"; mkdir -p "$p"; echo "$url" > "$p/url"; echo '. $OZH/feed/telepolis; _feed_telepolis' > "$p/onupdate"; }; }
+  _feed_telepolis(){ count=1; format=_filter_rss; }; }
