@@ -55,6 +55,9 @@ _feed_web(){
     done)</table>";;
   esac; _reply "$r"; }
 
+_feed_touch(){
+  busybox touch -d $(busybox date "+%Y%m%d%H%M.%S" -D "%s" -d $(( $(date +%s) + $2 )) ) "$1"; }
+
 _feed_daemon(){
   local verbose=true
   md5sumonly(){ md5sum $1 | awk '{print $1}'; }
@@ -75,10 +78,9 @@ _feed_daemon(){
         local http_modified=$(cat "$tmp" |grep "^Last-Modified:"|busybox sed "s/Last-Modified: //")
         if test "$http_status" -eq 200 -o "$http_status" -eq 302 -o "$http_status" -eq 0; then
           $verbose && printf "$bgreen$white$bold $http_status $R " >&2 
-          local nextupdate=$(( $(date +"%s") + $interval))
           [ -z "$http_modified" ] && echo -n "$http_modified" > "$task/next"
           echo "$result"|busybox sed '1,/^.$/d' > "$task/cache"
-          $(which touch) --date="1970-01-01 $nextupdate sec" "$task/next"
+          _feed_touch "$task/next" "$interval"
           ( cat "$tmp" | "$format" > "$task/cache"; ) 2>/dev/null
           [ -f "$task/last" ] || touch "$task/last"
           if [ ! "$(md5sumonly "$task/cache")" = "$(md5sumonly "$task/last")" ];then
