@@ -39,10 +39,10 @@ _license(){ echo "
     wget -qO- "$url" | _fefe_format_console; }; }
 
 [ -n "FEED_REQUIRE" ] && {
-  _feed_fefe(){ count=1; format=_fefe_format_feed
+  _feed_fefe(){ format=_fefe_format_feed
     _fefe_format_feed(){ awk 'BEGIN{an=0;article=0}
-      /<li>/{article=1;an++;if(an>0&&an<'$count'+1)printf ""}
-      (an>'$count'){exit(0)}
+      /<li>/{article=1;an++;if(an>0&&an<2)printf ""}
+      (an>1){exit(0)}
       (article){
         gsub("\\[l\\]","",$0)
         gsub("<li>","",$0); gsub("</li>","'$R'",$0)
