@@ -94,5 +94,5 @@ _feed_daemon(){
 
 _install_feed(){
   [ -d "$OZH/uht" ] && { echo ". $OZH/feed/feed; _feed_web" > "$OZH/uht/feed"; }
-  for i in fefe nne spin heise eztv telepolis;do
+  for i in fefe nne spin heise eztv telepolis fltrack;do
     FEED_REQUIRE="$i" oz install feed/$i; mkdir -p "$OZH/feed/list/$i"; done; }
