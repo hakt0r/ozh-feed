@@ -93,6 +93,8 @@ _feed_daemon(){
     done; }
 
 _install_feed(){
-  [ -d "$OZH/uht" ] && { echo ". $OZH/feed/feed; _feed_web" > "$OZH/uht/feed"; }
+  [ -d "$OZH/uht" ] && {
+    local p="$OZH/uht/plugin.available/feed"; mkdir -p "$p"
+    echo ". $OZH/feed/feed; _feed_web" > "$p/feed"; }
   for i in fefe nne spin heise eztv telepolis fltrack;do
     FEED_REQUIRE="$i" oz install feed/$i; mkdir -p "$OZH/feed/list/$i"; done; }
