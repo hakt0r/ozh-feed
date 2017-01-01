@@ -2,7 +2,7 @@
 
 _copyright(){ echo "
   ozh lightweight shell extensions
-  2008-2014 - anx @ ulzq de (Sebastian Glaser)
+  2008-2016 - anx @ ulzq de (Sebastian Glaser)
   Licensed under GNU GPL v3"; }
 _license(){ echo "
   ozh is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@ _license(){ echo "
   http://www.gnu.org/licenses/gpl.html"; }
 
 
-_filter_spin(){ sed -n '/<title/{s/<title>//;s/<\/title>//;p}'| iconv -f iso-8859-1 -t utf-8 | tail -n +3; }
+_filter_spin(){ busybox sed -n '/<title/{s/<title>//;s/<\/title>//;p}'| iconv -f iso-8859-1 -t utf-8 | Btail -n +3; }
 
 [ -n "OZH_REQUIRE" ] && {
   _feed_spin_defaults(){ url="http://www.spiegel.de/schlagzeilen/index.rss"; }

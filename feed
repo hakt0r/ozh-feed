@@ -2,7 +2,7 @@
 
 _copyright(){ echo "
   ozh lightweight shell extensions
-  2008-2014 - anx @ ulzq de (Sebastian Glaser)
+  2008-2016 - anx @ ulzq de (Sebastian Glaser)
   Licensed under GNU GPL v3"; }
 _license(){ echo "
   ozh is free software; you can redistribute it and/or modify
@@ -22,8 +22,8 @@ _license(){ echo "
 
   http://www.gnu.org/licenses/gpl.html"; }
 
-_filter_rss(){ sed 's/>/>\n/g;' | sed -n '/<\/title>/{s/<\/title>//;p}' | tail -n +2; }
-_format_title(){ awk 'BEGIN{FS=":"}{printf "'$bred$white$bold'%s '$R'%s\n",$1,$2}'; }
+_filter_rss(){ busybox sed 's/>/>\n/g;' | busybox sed -n '/<\/title>/{s/<\/title>//;p}' | tail -n +2; }
+_format_title(){ busybox awk 'BEGIN{FS=":"}{printf "'$bred$white$bold'%s '$R'%s\n",$1,$2}'; }
 
 _feed_web(){
   local base="$OZH/feed/list"; mkdir -p "$base"; _read_arg
@@ -56,11 +56,11 @@ _feed_web(){
   esac; _reply "$r"; }
 
 _feed_touch(){
-  busybox touch -d $(busybox date "+%Y%m%d%H%M.%S" -D "%s" -d $(( $(date +%s) + $2 )) ) "$1"; }
+  Btouch -d $(Bdate "+%Y%m%d%H%M.%S" -D "%s" -d $(( $(date +%s) + $2 )) ) "$1"; }
 
 _feed_daemon(){
   local verbose=true
-  md5sumonly(){ md5sum $1 | awk '{print $1}'; }
+  md5sumonly(){ md5sum $1 | busybox awk '{print $1}'; }
   local url= count= format= task= name= nextrun="0" base="$OZH/feed/list"
   mkdir -p "$base"
   while sleep $nextrun.9;do
@@ -75,7 +75,7 @@ _feed_daemon(){
         local tmp=$(mktemp)
         curl -L -si "$url" 2>/dev/null >"$tmp" # "$lastarg"
         local http_status=$(cat "$tmp"|head -n1|busybox sed 's/^HTTP\/... //'|cut -f 1 -d ' ')
-        local http_modified=$(cat "$tmp" |grep "^Last-Modified:"|busybox sed "s/Last-Modified: //")
+        local http_modified=$(cat "$tmp" |busybox grep "^Last-Modified:"|busybox sed "s/Last-Modified: //")
         if test "$http_status" -eq 200 -o "$http_status" -eq 302 -o "$http_status" -eq 0; then
           $verbose && printf "$bgreen$white$bold $http_status $R " >&2 
           [ -z "$http_modified" ] && echo -n "$http_modified" > "$task/next"

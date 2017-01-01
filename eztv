@@ -2,7 +2,7 @@
 
 _copyright(){ echo "
   ozh lightweight shell extensions
-  2008-2014 - anx @ ulzq de (Sebastian Glaser)
+  2008-2016 - anx @ ulzq de (Sebastian Glaser)
   Licensed under GNU GPL v3"; }
 _license(){ echo "
   ozh is free software; you can redistribute it and/or modify
@@ -24,8 +24,8 @@ _license(){ echo "
 
 
 [ -n "OZH_REQUIRE" ] && {
-  _feed_eztv_filter(){ sed -n '/<title/{s/.*CDATA\[//;s/\]\]>.*//;s/\[.*//;p}' | sed '1,2d'; }
-  _feed_eztv_format(){ awk '{s=""}/ [0-9]*x[0-9]*/{s=$NF;$NF=""}{printf "'$bred$white$bold' %s '$R' %s\n",$0,s}'; }
+  _feed_eztv_filter(){ busybox sed -n '/<title/{s/.*CDATA\[//;s/\]\]>.*//;s/\[.*//;p}' | busybox sed '1,2d'; }
+  _feed_eztv_format(){ busybox awk '{s=""}/ [0-9]*x[0-9]*/{s=$NF;$NF=""}{printf "'$bred$white$bold' %s '$R' %s\n",$0,s}'; }
   _feed_eztv_defaults(){ url="http://ezrss.it/feed/"; }
   eztv(){ _feed_eztv_defaults; wget -qO- "$url" | _feed_eztv_filter | _feed_eztv_format; }; }
 

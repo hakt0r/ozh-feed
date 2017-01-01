@@ -2,7 +2,7 @@
 
 _copyright(){ echo "
   ozh lightweight shell extensions
-  2008-2014 - anx @ ulzq de (Sebastian Glaser)
+  2008-2016 - anx @ ulzq de (Sebastian Glaser)
   Licensed under GNU GPL v3"; }
 _license(){ echo "
   ozh is free software; you can redistribute it and/or modify
@@ -24,7 +24,7 @@ _license(){ echo "
 
 [ -n "OZH_REQUIRE" ] && {
   _feed_fefe_defaults(){ url="http://blog.fefe.de"; }
-  _fefe_format_console() { sed 's/>/>\n/g' | awk '
+  _fefe_format_console() { busybox sed 's/>/>\n/g' | busybox awk '
     BEGIN{an=0;article=0;printf "'$bred$bold$white'fefe'$R'"}
     /<li>/{article=1;an++;if(an>0&&an<'$count'+1)printf "\n%s*%s"," '$bold$white'","'$R'"}
     (an>'$count'){exit(0)}
@@ -40,7 +40,7 @@ _license(){ echo "
 
 [ -n "FEED_REQUIRE" ] && {
   _feed_fefe(){ format=_fefe_format_feed
-    _fefe_format_feed(){ awk 'BEGIN{an=0;article=0}
+    _fefe_format_feed(){ busybox awk 'BEGIN{an=0;article=0}
       /<li>/{article=1;an++;if(an>0&&an<2)printf ""}
       (an>1){exit(0)}
       (article){
